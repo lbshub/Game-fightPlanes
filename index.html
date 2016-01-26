@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <title>打飞机</title>
+
+<style type="text/css">
+    *{margin: 0; padding: 0; box-sizing: border-box;}
+    html,body{width: 100%; height: 100%; overflow: hidden;}
+    body{background-color: #EEF3FA;}
+    .game{width: 100%; height: 100%; overflow: hidden; position: relative;}
+    .score, .time{display: none; position: absolute; top: 0; z-index: 5; width: 100px; height: 50px; line-height: 50px; text-align: center; font-size: 18px;}
+    .score span, .time span{font-weight: bold; color:#f00; padding: 0 10px;}
+    .score{left: 0;}
+    .time{right: 0;}
+    .start, .move, .end, .main, .load{ position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: 5;}
+    .start, .move, .end, .load{ z-index: 10; background: rgba(0,0,0,.6); color: #fff; font-size: 18px; text-align: center; }
+    .start span{display: inline-block; width:80%; height: 50px; position: absolute; left: 50%; top: 50%; margin: -25px 0 0 -40%; line-height: 50px; border: 1px solid #fff; border-radius:10px; text-align: center; color: #fff;}
+    .load{background: rgba(0,0,0,1); z-index: 20;}
+    .load span{position: absolute; left: 50%; bottom: 50px; margin-left: -40%; display: block; width: 80%; height: 10px; font-size: 0; line-height: 0; background: #fff; }
+    .load span b{position: absolute; left: 0; display: block;height: 10px; font-size: 0; line-height: 0; background: #000;}
+    .end, .move{display: none;}
+    .end ul, .move ul{position: absolute; left: 50%; top: 50%; width: 80%; height: 100px; margin: -50px 0 0 -40%;}
+    .end li, .move li{list-style: none; width: 100%;height: 50px;line-height: 50px; }
+    .end span, .move span{display: inline-block; width:100%; height: 50px; line-height: 50px; border: 1px solid #fff; border-radius:10px; text-align: center; color: #fff;}
+    .end b{font-weight: bold; font-size: 24px; color: #0f0; margin: 0 5px;}
+    .main img{position: absolute;}
+</style>
+
+</head>
+<body>
+    
+<div class="game">
+    <div class="load" id="game-load"><span><b id="load-progress"></b></span></div>
+    <div class="score" id="game-score"><span>0</span>分</div>
+    <div class="time" id="game-time"><span>0</span>秒</div>
+    <div class="start" id="game-start"><span>开始游戏</span></div>
+    <div class="move" id="game-move">
+        <ul>
+            <li>游戏暂停中...</li>
+            <li><span>继续游戏</span></li>
+        </ul>
+    </div>
+    <div class="end" id="game-end">
+        <ul>
+            <li>你的得分是<b>0</b>分</li>
+            <li><span>再玩一次</span></li>
+        </ul>
+    </div>
+    <div class="main" id="game-main"></div>
+</div>
+
+<script type="text/javascript" src="fightPlanes.js"></script>
+<script type="text/javascript">
+//loading
+(function() {
+    var imgs = ['images/me.png','images/bullet.png','images/dj-01.png','images/dj-02.png','images/dj-03.png','images/dj-04.png','images/dj-05.png'],
+        length = imgs.length,
+        i = 0,
+        count = 0,
+        progress = 0,
+        loadBox = document.getElementById('game-load'),
+        loadProgress = document.getElementById('load-progress');
+    for (; i < length; i++) {
+        (function(i) {
+            var img = new Image();
+            img.onload = function() {
+                progress = Math.ceil(++count / length * 100);
+                // console.log(progress)
+                loadProgress.style.width = progress + '%';
+                this.onload = null;
+                if (count === length) {
+                   loadBox.style.display = 'none';
+                }
+            }
+            img.src = imgs[i];
+        })(i);
+    }
+}());
+
+//use
+var $ = function(s,p){return (p || document).querySelector(s);};   
+var scoreBox = $('#game-score'),
+    timeBox = $('#game-time'),
+    startBox = $('#game-start'),
+    moveBox = $('#game-move'),
+    endBox = $('#game-end'),
+    mainBox = $('#game-main'),
+    nowScores = $('span', scoreBox),
+    nowTimes = $('span', timeBox),
+    startBtn = $('span', startBox),
+    continueBtn = $('span', moveBox),
+    replayBtn = $('span', endBox),
+    totalScores = $('b', endBox),
+    myFightPlanes = new fightPlanes({
+        parent: mainBox,
+        move: function(scores, times) {
+            nowScores.innerHTML = scores;
+            nowTimes.innerHTML = times;
+        },
+        end: function(scores, times) {
+            endBox.style.display = 'block';
+            totalScores.innerHTML = scores;
+            // alert('持续' + times / 1000 + '秒，游戏结束！');
+        }
+    });
+startBtn.onclick = function() {
+    startBox.style.display = 'none';
+    scoreBox.style.display = 'block';
+    timeBox.style.display = 'block';
+    myFightPlanes.play();
+};
+mainBox.onclick = function() {
+    moveBox.style.display = 'block';
+    myFightPlanes.pause();
+};
+continueBtn.onclick = function() {
+    moveBox.style.display = 'none';
+    myFightPlanes.play();
+};
+replayBtn.onclick = function() {
+    endBox.style.display = 'none';
+    nowScores.innerHTML = 0;
+    nowTimes.innerHTML = 0;
+    myFightPlanes.replay();
+};
+</script>
+
+</body>
+</html>
